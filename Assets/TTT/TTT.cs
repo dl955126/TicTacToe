@@ -78,6 +78,41 @@ public class TTT : MonoBehaviour
         }
         //If a player controls a corner, but not the center, they should take a cell
         //adjacent to the corner they control
+        if (cells[1,1].current != currentPlayer)
+        {
+            foreach(var corner in boardCorners)
+            {
+                if (cells[corner.x, corner.y].current == currentPlayer)
+                {
+
+                    ChooseSpace(2, 1);
+                    return;
+                }
+            }
+        }
+        //at this point, the processes of attempting to win/blocking will likely play
+        //out and result in a tie.
+        var (foundMove, moveX, moveY) = IsAboutToWin();
+        if (foundMove)
+        {
+            ChooseSpace(moveX, moveY);
+            return;
+        }
+
+        //as a fail-safe, if none of the above happens, take a random cell
+        for (int i = 0; i < Rows; i++)
+        {
+            for (int j = 0; j < Columns; j++)
+            {
+                if(cells[j, i].current == PlayerOption.NONE)
+                {
+                    //pick first empty cell
+                    Debug.Log("Found empty cell");
+                    ChooseSpace(j, i);
+                    return;
+                }
+            }
+        }
 
 
     }
@@ -98,6 +133,137 @@ public class TTT : MonoBehaviour
             }
         }
         return true;
+    }
+
+    (bool, int, int) IsAboutToWin()
+    {
+        // sum each row/column based on what's in each cell X = 1, O = -1, blank = 0
+        // we have a winner if the sum = 3 (X) or -3 (O)
+        int sum = 0;
+        int tempEmptyX = -1;
+        int tempEmptyY = -1;
+
+        // check rows
+        for (int i = 0; i < Rows; i++)
+        {
+            sum = 0;
+            for (int j = 0; j < Columns; j++)
+            {
+                var value = 0;
+                if (cells[j, i].current == PlayerOption.X)
+                    value = 1;
+                else if (cells[j, i].current == PlayerOption.O)
+                    value = -1;
+                else if ((cells[j, i].current == PlayerOption.NONE))
+                {
+                    tempEmptyX = j;
+                    tempEmptyY = i;
+
+                }
+
+                sum += value;
+            }
+
+            if ((sum == 2 || sum == -2))
+            {
+                Debug.Log("Place to block [" + tempEmptyX + ", " + tempEmptyY + "]");
+                return (true, tempEmptyX, tempEmptyY);
+            }
+                
+
+        }
+
+        // check columns
+        for (int j = 0; j < Columns; j++)
+        {
+            sum = 0;
+            for (int i = 0; i < Rows; i++)
+            {
+                var value = 0;
+                if (cells[j, i].current == PlayerOption.X)
+                    value = 1;
+                else if (cells[j, i].current == PlayerOption.O)
+                    value = -1;
+                else if ((cells[j, i].current == PlayerOption.NONE))
+                {
+                    tempEmptyX = j;
+                    tempEmptyY = i;
+                }
+
+                sum += value;
+            }
+
+            if ((sum == 2 || sum == -2))
+            {
+                Debug.Log("Place to block [" + tempEmptyX + ", " + tempEmptyY + "]");
+                return (true, tempEmptyX, tempEmptyY);
+            }
+
+        }
+
+        // check diagonals
+        // top left to bottom right
+        sum = 0;
+        for (int i = 0; i < Rows; i++)
+        {
+            int value = 0;
+            if (cells[i, i].current == PlayerOption.X)
+                value = 1;
+            else if (cells[i, i].current == PlayerOption.O)
+                value = -1;
+            else if ((cells[i, i].current == PlayerOption.NONE))
+            {
+                tempEmptyY = i;
+            }
+
+            sum += value;
+        }
+
+        if ((sum == 2 || sum == -2))
+        {
+            Debug.Log("Place to block [" + tempEmptyY + ", " + tempEmptyY + "]");
+            return (true, tempEmptyY, tempEmptyY);
+        }
+
+        // top right to bottom left
+        sum = 0;
+        for (int i = 0; i < Rows; i++)
+        {
+            int value = 0;
+
+            if (cells[Columns - 1 - i, i].current == PlayerOption.X)
+                value = 1;
+            else if (cells[Columns - 1 - i, i].current == PlayerOption.O)
+                value = -1;
+            else if ((cells[i, i].current == PlayerOption.NONE))
+            {
+                tempEmptyY = i;
+            }
+
+            sum += value;
+        }
+
+        if ((sum == 2 || sum == -2))
+        {
+            Debug.Log("Place to block [" + tempEmptyY + ", " + tempEmptyY + "]");
+            return (true, tempEmptyY, tempEmptyY);
+        }
+
+        return (false, -1, -1);
+    }
+
+    public PlayerOption Opponent()
+    {
+        if (currentPlayer == PlayerOption.X)
+        {
+            return PlayerOption.O;
+        }
+        else if (currentPlayer == PlayerOption.O)
+        {
+            return PlayerOption.X;
+        }
+
+        return PlayerOption.NONE;
     }
 
     public void ChooseSpace(int column, int row)
