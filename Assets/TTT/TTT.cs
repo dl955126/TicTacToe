@@ -14,6 +14,7 @@ public class TTT : MonoBehaviour
     public int Rows;
     public int Columns;
     [SerializeField] bool isBoardEmpty;
+    [SerializeField] bool hasTakenCenter = false;
     [SerializeField] BoardView board;
 
     PlayerOption currentPlayer = PlayerOption.X;
@@ -52,18 +53,21 @@ public class TTT : MonoBehaviour
     //hint time travel?
     public void MakeOptimalMove()
     {
-
+        Debug.Log("Button Pressed");
         isBoardEmpty = IsBoardEmpty();
+
 
         //If the board is empty, it is advantageous to take a corner
         if (isBoardEmpty)
         {
+            Debug.Log("Board is Empty");
             ChooseSpace(2, 0);
             return;
         }
         //If the opponent controls a corner, but the center is open, take the center
         if (cells[1, 1].current ==  PlayerOption.NONE)
         {
+            Debug.Log("Take the center");
             foreach (var corner in boardCorners) 
             {
                 if (cells[corner.x, corner.y].current != PlayerOption.NONE &&
@@ -78,14 +82,16 @@ public class TTT : MonoBehaviour
         }
         //If a player controls a corner, but not the center, they should take a cell
         //adjacent to the corner they control
-        if (cells[1,1].current != currentPlayer)
+        if (cells[1,1].current != currentPlayer && !hasTakenCenter)
         {
-            foreach(var corner in boardCorners)
+            Debug.Log("take adjacent cell");
+            foreach (var corner in boardCorners)
             {
                 if (cells[corner.x, corner.y].current == currentPlayer)
                 {
 
                     ChooseSpace(2, 1);
+                    hasTakenCenter = true;
                     return;
                 }
             }
@@ -95,6 +101,7 @@ public class TTT : MonoBehaviour
         var (foundMove, moveX, moveY) = IsAboutToWin();
         if (foundMove)
         {
+            Debug.Log("Block/Win");
             ChooseSpace(moveX, moveY);
             return;
         }
